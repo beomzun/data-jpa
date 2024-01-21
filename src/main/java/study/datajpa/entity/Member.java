@@ -19,7 +19,9 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "username", "age"})       //"team"을 포함하면 연관관계로 인한 무한루프 장애 발생
-@NamedQuery(    //namedQuery 설정
+//namedQuery 설정. 기본적으로 정적 쿼리임
+//가장 큰 장점 : 애플리케이션 로딩 시점에 쿼리문을 파싱하여 문법 오류를 체크해봄.
+@NamedQuery(
         name = "Member.findByUsername",
         query = "select m from Member m where m.username=:username"
 )
