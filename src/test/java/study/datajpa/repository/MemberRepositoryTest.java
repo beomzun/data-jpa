@@ -3,6 +3,8 @@ package study.datajpa.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,9 @@ class MemberRepositoryTest {
 
     @Autowired
     TeamRepository teamRepository;
+
+    @PersistenceContext
+    EntityManager em;
 
     @Test
     public void testMember() {
@@ -198,5 +203,34 @@ class MemberRepositoryTest {
         assertThat(page.getTotalPages()).isEqualTo(2);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    public void bulkUpdate() {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        //when
+        //모든 jpql은 날아가기 전에 이전 내용을 db에 반영함(flush)
+        int resultCount = memberRepository.bulkAgePlus(20);
+        //bulk 연산의 주의사항!!!
+        //Jpa는 영속성 컨텍스트(1차 캐시) 내부에서 객체를 관리.
+        //bulk 연산은 컨텍스트 내부에서 객체를 조작하는 것이 아닌 db에 다이렉트로 반영함 = 컨텍스트 무시 + DB 적용 -> 영속성 컨텍스트는 이를 인지하지 못함
+        // -> 아래 결과를 보면 출력된 member5의 age는 40이지만, db를 조회할경우 41로 나옴
+        // 따라서 bulk 연산 이후에는 영속성 컨텍스트를 날려야함.
+        em.flush(); //남은 내용 변경 적용
+        em.clear(); //이 코드를 적거나 repository의 modifying에 clearAutomatically = true 옵션을 적용하거나(spring data jpa 지원)
+
+        //clear 이후 새롭게 조회
+        List<Member> result = memberRepository.findListByUsername("member5");
+        Member member5 = result.get(0);
+        System.out.println("member5 = " + member5);
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
     }
 }
