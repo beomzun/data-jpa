@@ -7,6 +7,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedQuery;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -25,6 +27,9 @@ import lombok.ToString;
         name = "Member.findByUsername",
         query = "select m from Member m where m.username=:username"
 )
+//Jpa 표준 스택임
+//repository의 attributePaths 옵션을 엔티티에서 이름으로 설정해놓는 느낌
+@NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))
 public class Member {
 
     @Id

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +21,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     List<Member> findTop3HelloBy();
 
-//    @Query(name = "Member.findByUsername")    //없어도 실행이 된다. Entity에서 메서드명과 같은 namedQuery를 우선적으로 찾음.
+    //    @Query(name = "Member.findByUsername")    //없어도 실행이 된다. Entity에서 메서드명과 같은 namedQuery를 우선적으로 찾음.
 //    없으면 메서드명에 따라서 쿼리 생성
     List<Member> findByUsername(@Param("username") String username);
 
@@ -52,5 +53,25 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying  //데이터변경 어노테이션
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
+
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    //Override -> 이미 findAll 메서드가 상위에 있기 때문
+    //EntityGraph -> JPQL 작성하지 않아도 객체 그래프 엮어서 가져오는 기능(결국 내부에서는 fetch join 사용)
+    // -> JPA 표준 스택임
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    //쿼리도 짜고 fetch join 붙이고 싶을 때
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    //findBy 기능에 fetch join 붙이고 싶을 때
+//    @EntityGraph(attributePaths = {"team"})
+    @EntityGraph("Member.all")
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
 
 }
