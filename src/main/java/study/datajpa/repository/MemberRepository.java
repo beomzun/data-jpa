@@ -43,5 +43,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findOptionalByUsername(String username);
 
-    Slice<Member> findByAge(int age, Pageable pageable);
+    //TotalCount 쿼리 자체가 비싸기 때문에, 비즈니스 로직과 순수 카운트 쿼리를 분리할 수 있음.
+    //아우터 조인 의 전체 카운트는 기준 row 수와 같기 때문에 카운트에서도 조인할 필요없이 기준 row 수만 구하면 된다
+    @Query(value = "select m from Member m left join m.team t", countQuery = "select count(m) from Member m")
+    Page<Member> findByAge(int age, Pageable pageable);
 }

@@ -176,21 +176,26 @@ class MemberRepositoryTest {
 
         //when
         //Slice는 요청 pageSize보다 1개 더 날림. 현재 3으로 설정했으니 쿼리에는 4로 나간다
-        Slice<Member> page = memberRepository.findByAge(age, pageRequest);
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+        //단순히 3건만 조회하고 싶은 경우 request 객체없이 아래처럼 사용할 수 있음
+        //Page<Member> page = memberRepository.findTop3ByAge(age)
+
+        //API 반환시 반드시 Dto로 변환해서 사용
+        Page<MemberDto> toMap = page.map(
+                member -> new MemberDto(member.getId(), member.getUsername(), null));
 
         //반환 타입이 Page 인 경우, DataJpa 가 totalCount 쿼리 자동으로 날림
         //long totalCount = memberRepository.totalCount(age);
 
         //then
         List<Member> content = page.getContent();
-
         //Slice는 total관련이 필요하지 않으므로 존재하지 않는다.
 //        long totalElements = page.getTotalElements();
 
         assertThat(content.size()).isEqualTo(3);
-//        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getTotalElements()).isEqualTo(5);
         assertThat(page.getNumber()).isEqualTo(0);
-//        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.getTotalPages()).isEqualTo(2);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
     }
