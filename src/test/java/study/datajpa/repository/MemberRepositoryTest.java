@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.transaction.annotation.Transactional;
@@ -174,19 +175,22 @@ class MemberRepositoryTest {
         int age = 10;
 
         //when
-        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+        //Slice는 요청 pageSize보다 1개 더 날림. 현재 3으로 설정했으니 쿼리에는 4로 나간다
+        Slice<Member> page = memberRepository.findByAge(age, pageRequest);
 
         //반환 타입이 Page 인 경우, DataJpa 가 totalCount 쿼리 자동으로 날림
         //long totalCount = memberRepository.totalCount(age);
 
         //then
         List<Member> content = page.getContent();
-        long totalElements = page.getTotalElements();
+
+        //Slice는 total관련이 필요하지 않으므로 존재하지 않는다.
+//        long totalElements = page.getTotalElements();
 
         assertThat(content.size()).isEqualTo(3);
-        assertThat(page.getTotalElements()).isEqualTo(5);
+//        assertThat(page.getTotalElements()).isEqualTo(5);
         assertThat(page.getNumber()).isEqualTo(0);
-        assertThat(page.getTotalPages()).isEqualTo(2);
+//        assertThat(page.getTotalPages()).isEqualTo(2);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
     }
